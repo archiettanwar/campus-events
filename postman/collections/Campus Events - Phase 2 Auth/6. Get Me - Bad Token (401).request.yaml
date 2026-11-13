@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/me"
+method: GET
+headers:
+  Authorization: "{{bearer_token_0fw0}}"
+order: 6000

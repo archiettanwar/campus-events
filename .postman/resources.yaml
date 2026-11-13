@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 803986d4-6662-4889-8ede-a77ae6007b52
+
+cloudResources:
+  collections:
+    ../postman/collections/Campus Events - Phase 2 Auth: 6c73c493-2fa1-45f5-8e7f-a3ca9c934d89
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/
