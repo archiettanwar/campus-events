@@ -1,70 +1,67 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../api/axios';
+import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
+import { socket } from '../services/socket';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('campuslab_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [loading, setLoading] = useState(true);
 
-  const loadUser = useCallback(async () => {
-    const savedToken = localStorage.getItem('token');
-    if (!savedToken) {
-      setUser(null);
-      setToken(null);
+  useEffect(() => {
+    const token = localStorage.getItem('campuslab_token');
+    if (!token) {
       setLoading(false);
       return;
     }
 
-    try {
-      const { data } = await api.get('/auth/me');
-      setUser(data.user);
-      setToken(savedToken);
-    } catch {
-      localStorage.removeItem('token');
-      setUser(null);
-      setToken(null);
-    } finally {
-      setLoading(false);
-    }
+    api
+      .get('/auth/me')
+      .then((res) => {
+        setUser(res.data.user);
+        localStorage.setItem('campuslab_user', JSON.stringify(res.data.user));
+        socket.emit('join', res.data.user._id);
+      })
+      .catch(() => {
+        localStorage.removeItem('campuslab_token');
+        localStorage.removeItem('campuslab_user');
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
+    const res = await api.post('/auth/login', { email, password });
+    localStorage.setItem('campuslab_token', res.data.token);
+    localStorage.setItem('campuslab_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    socket.emit('join', res.data.user._id);
+    return res.data.user;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
+  const register = async (formData) => {
+    const res = await api.post('/auth/register', formData);
+    localStorage.setItem('campuslab_token', res.data.token);
+    localStorage.setItem('campuslab_user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+    socket.emit('join', res.data.user._id);
+    return res.data.user;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+    localStorage.removeItem('campuslab_token');
+    localStorage.removeItem('campuslab_user');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-}
+export const useAuth = () => useContext(AuthContext);

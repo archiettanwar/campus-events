@@ -1,52 +1,45 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [generalError, setGeneralError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
   const { register } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    rollNumber: '',
+    department: 'Computer Engineering',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFieldErrors({});
-    setGeneralError('');
-    setSubmitting(true);
-
+    setError('');
+    setLoading(true);
     try {
-      const user = await register(name, email, password);
-      addToast(`Account created! Welcome, ${user.name}.`, 'success');
+      await register(form);
       navigate('/');
     } catch (err) {
-      if (err.response?.data?.errors) {
-        setFieldErrors(err.response.data.errors);
-      } else {
-        setGeneralError(err.response?.data?.message || 'Registration failed');
-      }
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-        <h1 className="text-2xl font-bold text-slate-900">Create a Student Account</h1>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
+        <h2 className="text-2xl font-bold text-slate-900">Student Registration</h2>
         <p className="text-sm text-slate-500 mt-1">
-          Sign up to browse and register for upcoming campus events.
+          Register to book lab workstations, council slots, and hardware kits
         </p>
 
-        {generalError && (
-          <div className="mt-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm text-rose-700">
-            {generalError}
+        {error && (
+          <div className="mt-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm">
+            {error}
           </div>
         )}
 
@@ -56,59 +49,68 @@ export default function RegisterPage() {
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Alex Student"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            {fieldErrors.name && (
-              <p className="text-xs text-rose-600 mt-1">{fieldErrors.name}</p>
-            )}
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">College Email</label>
             <input
               type="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="alex@campus.edu"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            {fieldErrors.email && (
-              <p className="text-xs text-rose-600 mt-1">{fieldErrors.email}</p>
-            )}
           </div>
-
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Roll Number</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g., CE-2026-101"
+                value={form.rollNumber}
+                onChange={(e) => setForm({ ...form, rollNumber: e.target.value })}
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+              <input
+                type="text"
+                required
+                value={form.department}
+                onChange={(e) => setForm({ ...form, department: e.target.value })}
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
             <input
               type="password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 8 chars, at least 1 number"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              minLength={6}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            {fieldErrors.password && (
-              <p className="text-xs text-rose-600 mt-1">{fieldErrors.password}</p>
-            )}
           </div>
-
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium text-sm rounded-lg transition-colors cursor-pointer"
+            disabled={loading}
+            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition"
           >
-            {submitting ? 'Creating account...' : 'Create account'}
+            {loading ? 'Creating account...' : 'Create Student Account'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link to="/login" className="text-indigo-600 font-medium hover:underline">
-            Sign in
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Already registered?{' '}
+          <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
+            Log in
           </Link>
         </p>
       </div>

@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
-    "seed:lab": "node src/scripts/seedLab.js",
+    "seed:lab": "node src/scripts/seedLab.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

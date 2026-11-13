@@ -6,9 +6,9 @@ import { Server } from 'socket.io';
 import { connectDB } from './config/db.js';
 import { initSockets } from './sockets/index.js';
 import authRoutes from './routes/auth.routes.js';
-import eventRoutes from './routes/event.routes.js';
-import registrationRoutes from './routes/registration.routes.js';
-import notificationRoutes from './routes/notification.routes.js';
+import resourceRoutes from './routes/resource.routes.js';
+import scheduleRoutes from './routes/schedule.routes.js';
+import requestRoutes from './routes/request.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
@@ -26,19 +26,20 @@ const io = new Server(httpServer, {
   },
 });
 
+app.set('io', io);
 initSockets(io);
 
 app.use(express.json());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', app: 'CampusLab API' });
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/registrations', registrationRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/requests', requestRoutes);
 
 app.use(errorHandler);
 

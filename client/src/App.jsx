@@ -1,51 +1,46 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext';
-import { SocketProvider } from './context/SocketContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import EventsPage from './pages/EventsPage';
-import MyRegistrationsPage from './pages/MyRegistrationsPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
+import MyRequestsPage from './pages/MyRequestsPage';
+import AssistantDashboardPage from './pages/AssistantDashboardPage';
+
+const ProtectedRoute = ({ children, allowedRole }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (allowedRole && user.role !== allowedRole) return <Navigate to="/" replace />;
+  return children;
+};
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <SocketProvider>
-            <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-              <Navbar />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<EventsPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route
-                    path="/my-registrations"
-                    element={
-                      <ProtectedRoute allowedRoles={['student']}>
-                        <MyRegistrationsPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute allowedRoles={['admin']}>
-                        <AdminDashboardPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </main>
-            </div>
-          </SocketProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </BrowserRouter>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/my-requests"
+          element={
+            <ProtectedRoute allowedRole="student">
+              <MyRequestsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute allowedRole="lab_assistant">
+              <AssistantDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   );
 }
