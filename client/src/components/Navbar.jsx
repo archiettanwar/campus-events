@@ -7,23 +7,32 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [connected, setConnected] = useState(socket.connected);
+  const [connected, setConnected] = useState(() =>
+    Boolean(socket?.connected || socket?.io?.engine?.readyState === 'open')
+  );
 
   useEffect(() => {
-    const updateStatus = () => setConnected(socket.connected);
-    updateStatus();
+    const checkConnection = () => {
+      const isOpen = Boolean(socket?.connected || socket?.io?.engine?.readyState === 'open');
+      setConnected(isOpen);
+    };
 
-    socket.on('connect', updateStatus);
-    socket.on('disconnect', updateStatus);
-    socket.on('connect_error', updateStatus);
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
 
-    const interval = setInterval(updateStatus, 2000);
+    checkConnection();
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.io.on('open', onConnect);
+
+    const timer = setInterval(checkConnection, 1000);
 
     return () => {
-      clearInterval(interval);
-      socket.off('connect', updateStatus);
-      socket.off('disconnect', updateStatus);
-      socket.off('connect_error', updateStatus);
+      clearInterval(timer);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.io.off('open', onConnect);
     };
   }, []);
 
