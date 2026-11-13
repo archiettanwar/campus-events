@@ -1,5 +1,5 @@
-import { Event } from '../models/Event.js';
-import { Registration } from '../models/Registration.js';
+import { Event } from '../models/LabResource.js';
+import { Registration } from '../models/CheckoutRequest.js';
 import { Notification } from '../models/Notification.js';
 import { getIO } from '../sockets/io.js';
 
