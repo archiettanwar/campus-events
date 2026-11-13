@@ -1,0 +1,12 @@
+$kind: collection
+description: ""
+variables:
+  baseUrl: http://localhost:5000/api
+  adminToken: ""
+  student1Token: ""
+  student2Token: ""
+  eventId: ""
+  cap1EventId: ""
+  reg1Id: ""
+  cap1Reg1Id: ""
+  cap1Reg2Id: ""

@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{baseUrl}}/events/{{eventId}}/register"
+method: POST
+headers:
+  Authorization: Bearer {{student1Token}}
+order: 9000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: 0b. Register/Login Student 1
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{"name":"Student One","email":"student1@campus.edu","password":"Password1"}'
+scripts:
+  - type: afterResponse
+    code: pm.collectionVariables.set('student1Token', pm.response.json().token);
+    language: text/javascript
+order: 2000

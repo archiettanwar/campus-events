@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/events/{{cap1EventId}}/register"
+method: POST
+headers:
+  Authorization: Bearer {{student2Token}}
+scripts:
+  - type: afterResponse
+    code: pm.collectionVariables.set('cap1Reg2Id', pm.response.json().registration._id);
+    language: text/javascript
+order: 15000

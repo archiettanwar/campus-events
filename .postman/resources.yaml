@@ -2,9 +2,12 @@
 workspace:
   id: 803986d4-6662-4889-8ede-a77ae6007b52
 
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
 cloudResources:
   collections:
     ../postman/collections/Campus Events - Phase 2 Auth: 6c73c493-2fa1-45f5-8e7f-a3ca9c934d89
+    ../postman/collections/Campus Events - Phase 3 Full API: 4bbb81a8-798d-4502-94ef-a70d9bc11dc6
 
 # All resources in the `postman/` folder are automatically registered in Local View.
 # Point to additional files outside the `postman/` folder to register them individually. Example:

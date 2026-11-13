@@ -1,0 +1,11 @@
+$kind: http-request
+name: 10e. Admin Approves Student 2 -> Full (409)
+url: "{{baseUrl}}/registrations/{{cap1Reg2Id}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+body:
+  type: text
+  content: '{"status":"approved"}'
+order: 17000

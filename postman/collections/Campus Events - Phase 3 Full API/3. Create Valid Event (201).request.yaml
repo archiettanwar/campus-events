@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/events"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+body:
+  type: text
+  content: '{"title":"Tech Symposium 2027","description":"Annual campus coding and robotics showcase.","date":"2027-05-10T10:00:00.000Z","registrationDeadline":"2027-05-05T10:00:00.000Z","capacity":50}'
+scripts:
+  - type: afterResponse
+    code: pm.collectionVariables.set('eventId', pm.response.json().event._id);
+    language: text/javascript
+order: 6000

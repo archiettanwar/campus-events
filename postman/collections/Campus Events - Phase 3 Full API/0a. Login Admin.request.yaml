@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{"email":"admin@campus.edu","password":"Admin@1234"}'
+scripts:
+  - type: afterResponse
+    code: pm.collectionVariables.set('adminToken', pm.response.json().token);
+    language: text/javascript
+order: 1000

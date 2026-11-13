@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/events"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+body:
+  type: text
+  content: '{"title":"VIP Workshop","description":"Exclusive single-seat workshop test.","date":"2027-06-01T10:00:00.000Z","registrationDeadline":"2027-05-25T10:00:00.000Z","capacity":1}'
+scripts:
+  - type: afterResponse
+    code: pm.collectionVariables.set('cap1EventId', pm.response.json().event._id);
+    language: text/javascript
+order: 13000

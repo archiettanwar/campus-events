@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/events"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+body:
+  type: text
+  content: '{"title":"Past Event","description":"Testing past date validation","date":"2020-01-01T10:00:00.000Z","registrationDeadline":"2019-12-25T10:00:00.000Z","capacity":20}'
+order: 4000

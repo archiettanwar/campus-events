@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/registrations/{{reg1Id}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+body:
+  type: text
+  content: '{"status":"approved"}'
+order: 12000

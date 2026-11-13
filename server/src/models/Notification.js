@@ -7,6 +7,10 @@ const notificationSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  event: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+  },
   message: {
     type: String,
     required: true,
