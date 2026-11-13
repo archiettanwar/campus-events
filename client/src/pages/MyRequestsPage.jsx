@@ -27,19 +27,23 @@ export default function MyRequestsPage() {
   }, []);
 
   useEffect(() => {
+  fetchMyRequests();
+  const syncInterval = setInterval(fetchMyRequests, 4000);
+
+  const handleStatusChange = (updated) => {
+    setLiveAlert(
+      `Update: Your request for "${updated.resource?.name}" is now ${updated.status.toUpperCase()}!`
+    );
+    setTimeout(() => setLiveAlert(''), 5000);
     fetchMyRequests();
+  };
 
-    const handleStatusChange = (updated) => {
-      setLiveAlert(
-        `Update: Your request for "${updated.resource?.name}" is now ${updated.status.toUpperCase()}!`
-      );
-      setTimeout(() => setLiveAlert(''), 5000);
-      fetchMyRequests();
-    };
-
-    socket.on('request:statusChanged', handleStatusChange);
-    return () => socket.off('request:statusChanged', handleStatusChange);
-  }, [fetchMyRequests]);
+  socket.on('request:statusChanged', handleStatusChange);
+  return () => {
+    clearInterval(syncInterval);
+    socket.off('request:statusChanged', handleStatusChange);
+  };
+}, [fetchMyRequests]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

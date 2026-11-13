@@ -57,15 +57,17 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetchAllData();
+  fetchAllData();
+  const syncInterval = setInterval(fetchAllData, 4000);
 
-    socket.on('resource:updated', fetchAllData);
-    socket.on('schedule:updated', fetchAllData);
-    return () => {
-      socket.off('resource:updated', fetchAllData);
-      socket.off('schedule:updated', fetchAllData);
-    };
-  }, [fetchAllData]);
+  socket.on('resource:updated', fetchAllData);
+  socket.on('schedule:updated', fetchAllData);
+  return () => {
+    clearInterval(syncInterval);
+    socket.off('resource:updated', fetchAllData);
+    socket.off('schedule:updated', fetchAllData);
+  };
+}, [fetchAllData]);
 
   const handleBookClick = (resource) => {
     if (!user) {

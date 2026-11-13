@@ -84,25 +84,27 @@ export default function AssistantDashboardPage() {
   }, []);
 
   useEffect(() => {
+  fetchDashboardData();
+  const syncInterval = setInterval(fetchDashboardData, 4000);
+
+  const handleNewRequest = (newReq) => {
+    showToast(`New request from ${newReq.student?.name || 'a student'}!`);
     fetchDashboardData();
+  };
 
-    const handleNewRequest = (newReq) => {
-      showToast(`New request from ${newReq.student?.name || 'a student'}!`);
-      fetchDashboardData();
-    };
+  socket.on('request:created', handleNewRequest);
+  socket.on('request:statusChanged', fetchDashboardData);
+  socket.on('schedule:updated', fetchDashboardData);
+  socket.on('resource:updated', fetchDashboardData);
 
-    socket.on('request:created', handleNewRequest);
-    socket.on('request:statusChanged', fetchDashboardData);
-    socket.on('schedule:updated', fetchDashboardData);
-    socket.on('resource:updated', fetchDashboardData);
-
-    return () => {
-      socket.off('request:created', handleNewRequest);
-      socket.off('request:statusChanged', fetchDashboardData);
-      socket.off('schedule:updated', fetchDashboardData);
-      socket.off('resource:updated', fetchDashboardData);
-    };
-  }, [fetchDashboardData]);
+  return () => {
+    clearInterval(syncInterval);
+    socket.off('request:created', handleNewRequest);
+    socket.off('request:statusChanged', fetchDashboardData);
+    socket.off('schedule:updated', fetchDashboardData);
+    socket.off('resource:updated', fetchDashboardData);
+  };
+}, [fetchDashboardData]);
 
   const handleRequestAction = async (requestId, status) => {
     try {

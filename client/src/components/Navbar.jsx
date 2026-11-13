@@ -2,37 +2,40 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { socket } from '../services/socket';
+import api from '../services/api';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [connected, setConnected] = useState(() =>
-    Boolean(socket?.connected || socket?.io?.engine?.readyState === 'open')
-  );
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const checkConnection = () => {
-      const isOpen = Boolean(socket?.connected || socket?.io?.engine?.readyState === 'open');
-      setConnected(isOpen);
+    let active = true;
+
+    const verifyBackendSync = async () => {
+      if (socket.connected) {
+        if (active) setConnected(true);
+        return;
+      }
+      try {
+        await api.get('/resources');
+        if (active) setConnected(true);
+      } catch {
+        if (active) setConnected(false);
+      }
     };
 
+    verifyBackendSync();
+    const timer = setInterval(verifyBackendSync, 10000);
+
     const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
-
-    checkConnection();
-
     socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    socket.io.on('open', onConnect);
-
-    const timer = setInterval(checkConnection, 1000);
 
     return () => {
+      active = false;
       clearInterval(timer);
       socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      socket.io.off('open', onConnect);
     };
   }, []);
 
@@ -80,7 +83,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <span
-            title={connected ? 'Real-time Socket.IO active' : 'Connecting to Render backend...'}
+            title={connected ? 'Real-time sync active' : 'Waking up backend...'}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600"
           >
             <span
@@ -88,7 +91,7 @@ export default function Navbar() {
                 connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
               }`}
             />
-            {connected ? 'Live' : 'Connecting...'}
+            {connected ? 'Live' : 'Syncing...'}
           </span>
 
           {user ? (
