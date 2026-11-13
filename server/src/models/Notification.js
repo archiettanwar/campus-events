@@ -37,5 +37,6 @@ const notificationSchema = new mongoose.Schema({
 });
 
 notificationSchema.index({ user: 1, createdAt: -1 });
+notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 
 export const Notification = mongoose.model('Notification', notificationSchema);

@@ -1,6 +1,7 @@
 import { Event } from '../models/Event.js';
 import { Registration } from '../models/Registration.js';
 import { Notification } from '../models/Notification.js';
+import { getIO } from '../sockets/io.js';
 
 export async function listEvents(req, res, next) {
   try {
@@ -89,6 +90,12 @@ export async function updateEvent(req, res, next) {
       runValidators: true,
     });
 
+    try {
+      getIO().emit('event:updated', { event });
+    } catch (err) {
+      console.error('Socket emit error:', err.message);
+    }
+
     return res.json({ event });
   } catch (error) {
     next(error);
@@ -106,6 +113,12 @@ export async function deleteEvent(req, res, next) {
       Registration.deleteMany({ event: event._id }),
       Notification.deleteMany({ event: event._id }),
     ]);
+
+    try {
+      getIO().emit('event:deleted', { eventId: event._id.toString() });
+    } catch (err) {
+      console.error('Socket emit error:', err.message);
+    }
 
     return res.status(204).send();
   } catch (error) {

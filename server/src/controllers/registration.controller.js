@@ -1,5 +1,8 @@
 import { Event } from '../models/Event.js';
 import { Registration } from '../models/Registration.js';
+import { User } from '../models/User.js';
+import { getIO } from '../sockets/io.js';
+import { notify } from '../utils/notify.js';
 
 export async function registerForEvent(req, res, next) {
   try {
@@ -20,6 +23,16 @@ export async function registerForEvent(req, res, next) {
       user: req.user.id,
       event: event._id,
     });
+
+    try {
+      const populated = await registration.populate([
+        { path: 'user', select: 'name email' },
+        { path: 'event', select: 'title' },
+      ]);
+      getIO().to('admins').emit('registration:new', { registration: populated });
+    } catch (err) {
+      console.error('Socket emit error:', err.message);
+    }
 
     return res.status(201).json({ registration });
   } catch (error) {
@@ -92,7 +105,47 @@ export async function updateRegistrationStatus(req, res, next) {
         return res.status(409).json({ message: 'Event is full' });
       }
 
-      return res.json({ registration, event: updatedEvent });
+      const populatedReg = await registration.populate('event', 'title date registrationDeadline');
+
+      await notify({
+        userId: registration.user,
+        eventId: updatedEvent._id,
+        message: `Your registration for "${updatedEvent.title}" has been approved!`,
+        type: 'registration_approved',
+        socketEvent: 'registration:updated',
+        socketPayload: { registration: populatedReg },
+      });
+
+      try {
+        getIO().emit('event:updated', { event: updatedEvent });
+
+        // Almost-full alert sent once when seats reach >= 90%
+        if (
+          updatedEvent.seatsTaken / updatedEvent.capacity >= 0.9 &&
+          !updatedEvent.almostFullNotified
+        ) {
+          updatedEvent.almostFullNotified = true;
+          await updatedEvent.save();
+
+          getIO().to('admins').emit('event:almostFull', { event: updatedEvent });
+
+          const admins = await User.find({ role: 'admin' }).select('_id');
+          await Promise.all(
+            admins.map((admin) =>
+              notify({
+                userId: admin._id,
+                eventId: updatedEvent._id,
+                message: `"${updatedEvent.title}" is almost full (${updatedEvent.seatsTaken}/${updatedEvent.capacity} seats taken).`,
+                type: 'event_almost_full',
+              })
+            )
+          );
+        }
+      } catch (err) {
+        console.error('Socket emit error:', err.message);
+      }
+
+      return res.json({ registration: populatedReg, event: updatedEvent });
     }
 
     // Handling status === 'rejected'
@@ -116,7 +169,18 @@ export async function updateRegistrationStatus(req, res, next) {
         return res.status(409).json({ message: 'Registration status changed concurrently' });
       }
 
-      return res.json({ registration });
+      const populatedReg = await registration.populate('event', 'title date registrationDeadline');
+
+      await notify({
+        userId: registration.user,
+        eventId: registration.event._id,
+        message: `Your registration for "${populatedReg.event?.title || 'an event'}" was rejected.`,
+        type: 'registration_rejected',
+        socketEvent: 'registration:updated',
+        socketPayload: { registration: populatedReg },
+      });
+
+      return res.json({ registration: populatedReg });
     }
 
     // Rejecting an already approved registration -> decrement seatsTaken by 1
@@ -136,7 +200,26 @@ export async function updateRegistrationStatus(req, res, next) {
       { new: true }
     );
 
-    return res.json({ registration, event: updatedEvent });
+    const populatedReg = await registration.populate('event', 'title date registrationDeadline');
+
+    await notify({
+      userId: registration.user,
+      eventId: registration.event._id,
+      message: `Your registration for "${populatedReg.event?.title || 'an event'}" was rejected.`,
+      type: 'registration_rejected',
+      socketEvent: 'registration:updated',
+      socketPayload: { registration: populatedReg },
+    });
+
+    if (updatedEvent) {
+      try {
+        getIO().emit('event:updated', { event: updatedEvent });
+      } catch (err) {
+        console.error('Socket emit error:', err.message);
+      }
+    }
+
+    return res.json({ registration: populatedReg, event: updatedEvent });
   } catch (error) {
     next(error);
   }
