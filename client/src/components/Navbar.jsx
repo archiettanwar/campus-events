@@ -10,20 +10,19 @@ export default function Navbar() {
   const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-    setConnected(socket.connected);
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
+  const syncStatus = () => setConnected(socket.connected);
+  syncStatus();
 
-    socket.on('connect', onConnect);
-    socket.io.on('reconnect', onConnect);
-    socket.on('disconnect', onDisconnect);
+  socket.on('connect', syncStatus);
+  socket.on('disconnect', syncStatus);
+  const timer = setTimeout(syncStatus, 1000);
 
-    return () => {
-      socket.off('connect', onConnect);
-      socket.io.off('reconnect', onConnect);
-      socket.off('disconnect', onDisconnect);
-    };
-  }, []);
+  return () => {
+    clearTimeout(timer);
+    socket.off('connect', syncStatus);
+    socket.off('disconnect', syncStatus);
+  };
+}, []);
 
   const handleLogout = () => {
     logout();
