@@ -10,19 +10,22 @@ export default function Navbar() {
   const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-  const syncStatus = () => setConnected(socket.connected);
-  syncStatus();
+    const updateStatus = () => setConnected(socket.connected);
+    updateStatus();
 
-  socket.on('connect', syncStatus);
-  socket.on('disconnect', syncStatus);
-  const timer = setTimeout(syncStatus, 1000);
+    socket.on('connect', updateStatus);
+    socket.on('disconnect', updateStatus);
+    socket.on('connect_error', updateStatus);
 
-  return () => {
-    clearTimeout(timer);
-    socket.off('connect', syncStatus);
-    socket.off('disconnect', syncStatus);
-  };
-}, []);
+    const interval = setInterval(updateStatus, 2000);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('connect', updateStatus);
+      socket.off('disconnect', updateStatus);
+      socket.off('connect_error', updateStatus);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -68,7 +71,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <span
-            title={connected ? 'Real-time Socket.IO active' : 'Reconnecting...'}
+            title={connected ? 'Real-time Socket.IO active' : 'Connecting to Render backend...'}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600"
           >
             <span
@@ -76,7 +79,7 @@ export default function Navbar() {
                 connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
               }`}
             />
-            {connected ? 'Live' : 'Offline'}
+            {connected ? 'Live' : 'Connecting...'}
           </span>
 
           {user ? (

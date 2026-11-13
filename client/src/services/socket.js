@@ -9,5 +9,8 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || fallbackFromApi;
 export const socket = io(SOCKET_URL, {
   autoConnect: true,
   withCredentials: true,
-  transports: ['websocket'],
+  transports: ['polling', 'websocket'], // Allow polling first to handle Render's proxy handshake
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
 });
