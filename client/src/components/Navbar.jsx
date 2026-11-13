@@ -13,10 +13,14 @@ export default function Navbar() {
     setConnected(socket.connected);
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
+
     socket.on('connect', onConnect);
+    socket.io.on('reconnect', onConnect);
     socket.on('disconnect', onDisconnect);
+
     return () => {
       socket.off('connect', onConnect);
+      socket.io.off('reconnect', onConnect);
       socket.off('disconnect', onDisconnect);
     };
   }, []);
